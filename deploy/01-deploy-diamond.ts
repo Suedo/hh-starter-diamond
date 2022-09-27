@@ -34,11 +34,9 @@ module.exports = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`Deploying Diamond facets: ${FacetNames}`);
     const cut = [];
     for (const FacetName of FacetNames) {
-        const Facet = await ethers.getContractFactory(FacetName);
-        const facet = await Facet.deploy();
-        await facet.deployed();
-        const diamondSelectors = new DiamondSelectors(facet);
+        const facet = await deploy(FacetName, deployArgs);
         console.log(`${FacetName} deployed: ${facet.address}`);
+        const diamondSelectors = new DiamondSelectors(await ethers.getContract(FacetName));
         cut.push({
             facetAddress: facet.address,
             action: FacetCutAction.Add,

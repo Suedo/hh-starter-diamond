@@ -26,13 +26,13 @@ describe("DiamondTest", async function () {
 
     before(async function () {
         deployer = (await getNamedAccounts()).deployer;
-        deployments.fixture(["Diamond"]);
+        await deployments.fixture(["all"]);
         accounts = await ethers.getSigners();
 
         diamondAddress = (await ethers.getContract("Diamond", deployer)).address;
-        diamondCutFacet = await ethers.getContract("DiamondCutFacet", deployer);
-        diamondLoupeFacet = await ethers.getContract("DiamondLoupeFacet", deployer);
-        ownershipFacet = await ethers.getContract("OwnershipFacet", deployer);
+        diamondCutFacet = await ethers.getContractAt("DiamondCutFacet", diamondAddress);
+        diamondLoupeFacet = await ethers.getContractAt("DiamondLoupeFacet", diamondAddress);
+        ownershipFacet = await ethers.getContractAt("OwnershipFacet", diamondAddress);
     });
 
     it("should have three facets -- call to facetAddresses function", async () => {
@@ -272,20 +272,31 @@ describe("DiamondTest", async function () {
         assert.equal(facets[4][0], facetAddresses[4], "fifth facet");
         assert.sameMembers(
             facets[findAddressPositionInFacets(addresses[0], facets)][1],
-            new DiamondSelectors(diamondCutFacet).selectors()
+            new DiamondSelectors(diamondCutFacet).selectors(),
+            "diamondCutFacet"
         );
-        assert.sameMembers(facets[findAddressPositionInFacets(addresses[1], facets)][1], diamondLoupeFacetSelectors);
+        assert.sameMembers(
+            facets[findAddressPositionInFacets(addresses[1], facets)][1],
+            diamondLoupeFacetSelectors.selectors(),
+            `diamondLoupeFacet
+              actual: ${JSON.stringify(facets[findAddressPositionInFacets(addresses[1], facets)][1])}
+              expected: ${JSON.stringify(diamondLoupeFacetSelectors.selectors())}
+            `
+        );
         assert.sameMembers(
             facets[findAddressPositionInFacets(addresses[2], facets)][1],
-            new DiamondSelectors(ownershipFacet).selectors()
+            new DiamondSelectors(ownershipFacet).selectors(),
+            "ownershipFacet"
         );
         assert.sameMembers(
             facets[findAddressPositionInFacets(addresses[3], facets)][1],
-            new DiamondSelectors(Test1Facet).selectors()
+            new DiamondSelectors(Test1Facet).selectors(),
+            "Test1Facet"
         );
         assert.sameMembers(
             facets[findAddressPositionInFacets(addresses[4], facets)][1],
-            new DiamondSelectors(Test2Facet).selectors()
+            new DiamondSelectors(Test2Facet).selectors(),
+            "Test2Facet"
         );
     });
 });

@@ -7,7 +7,7 @@ import "hardhat-gas-reporter";
 import "solidity-coverage";
 
 const config: HardhatUserConfig = {
-    solidity: "0.8.17",
+    solidity: "0.8.9",
     namedAccounts: {
         deployer: {
             default: 0, // here this will by default take the first account as deployer
