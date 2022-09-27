@@ -1,6 +1,6 @@
 /* global ethers */
 
-import {Contract} from "ethers";
+import {Contract, ContractFactory} from "ethers";
 import {Fragment, FunctionFragment} from "ethers/lib/utils";
 import {ethers} from "hardhat";
 import {IDiamondLoupe} from "../../typechain-types/interfaces";
@@ -8,15 +8,15 @@ import {IDiamondLoupe} from "../../typechain-types/interfaces";
 const FacetCutAction = {Add: 0, Replace: 1, Remove: 2};
 
 class DiamondSelectors {
-    private selectors: string[];
-    public contract: Contract;
+    private _selectors: string[];
+    public contract: Contract | ContractFactory;
 
-    constructor(contract: Contract, selectors?: string[]) {
+    constructor(contract: Contract | ContractFactory, selectors?: string[]) {
         this.contract = contract;
         const signatures = Object.keys(contract.interface.functions);
-        if (selectors) this.selectors = selectors;
+        if (selectors) this._selectors = selectors;
         else {
-            this.selectors = signatures.reduce((acc: string[], val) => {
+            this._selectors = signatures.reduce((acc: string[], val) => {
                 if (val !== "init(bytes)") {
                     acc.push(contract.interface.getSighash(val));
                 }
@@ -25,13 +25,13 @@ class DiamondSelectors {
         }
     }
 
-    public getSelectors() {
-        return this.selectors;
+    public selectors() {
+        return this._selectors;
     }
 
     public remove(functionNames: (FunctionFragment | string)[]) {
         let newSelectors = this.subset(functionNames, true); // total selectors excluding functionNames
-        this.selectors = newSelectors;
+        this._selectors = newSelectors;
         return this;
     }
 
@@ -47,7 +47,7 @@ class DiamondSelectors {
      * @returns
      */
     private subset(functionNames: (string | FunctionFragment)[], inverse = false) {
-        return this.selectors.filter((v) => {
+        return this._selectors.filter((v) => {
             for (const functionName of functionNames) {
                 if (v === this.contract.interface.getSighash(functionName)) {
                     return inverse ? false : true;
@@ -65,10 +65,10 @@ function getSelector(func: FunctionFragment | string): string {
 }
 
 // remove selectors using an array of signatures
-function removeSelectors(selectors: DiamondSelectors, signatures: string[]) {
+function removeSelectors(selectors: string[], signatures: string[]) {
     const iface = new ethers.utils.Interface(signatures.map((v) => "function " + v));
     const removeSelectors = signatures.map((v) => iface.getSighash(v));
-    let newSelectors = selectors.getSelectors().filter((v) => !removeSelectors.includes(v));
+    let newSelectors = selectors.filter((v) => !removeSelectors.includes(v));
     return newSelectors;
 }
 
@@ -79,5 +79,6 @@ function findAddressPositionInFacets(facetAddress: string, facets: IDiamondLoupe
             return i;
         }
     }
+    return -1; // error
 }
 export {DiamondSelectors, FacetCutAction, findAddressPositionInFacets, getSelector, removeSelectors};
