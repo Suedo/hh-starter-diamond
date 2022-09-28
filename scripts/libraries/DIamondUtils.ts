@@ -29,10 +29,10 @@ class DiamondSelectors {
         return this._selectors;
     }
 
+    // both remove and get functions will return a new DiamondSelector, and keep this untampered
     public remove(functionNames: (FunctionFragment | string)[]) {
         let newSelectors = this.subset(functionNames, true); // total selectors excluding functionNames
-        this._selectors = newSelectors;
-        return this;
+        return new DiamondSelectors(this.contract, newSelectors);
     }
 
     public get(functionNames: (string | FunctionFragment)[]) {
